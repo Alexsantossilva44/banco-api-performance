@@ -5,7 +5,13 @@
 - [x] Documentar os endpoints e payloads testados no README ou no relatório de QA.
 - [x] Configurar `thresholds` abrangentes: p(95), p(99), TTFB e handshake TCP.
 - [x] Externalizar credenciais via variáveis de ambiente (`__ENV`).
-- [ ] Criar cenário de teste com credenciais inválidas para verificar resposta `401` ou `403`.
-- [ ] Validar o schema completo do payload de resposta, não apenas a presença de `token`.
-- [ ] Verificar o comportamento do endpoint quando o corpo contém campos ausentes ou inválidos.
+- [x] Criar cenário de teste com credenciais inválidas para verificar resposta `401`.
+- [x] Validar o schema do payload de resposta além da presença de `token` — formato JWT verificado.
+- [x] Usar `setup()` e `teardown()` para controlar o ciclo de vida do teste.
+- [x] Adicionar múltiplos cenários (`smoke` e `load`) selecionáveis via variável de ambiente.
+- [x] Externalizar a URL base via `__ENV.BASE_URL` para portabilidade entre ambientes.
+- [x] Adicionar tags nas requisições (`endpoint`, `env`, `scenario`) para filtragem em dashboards.
+- [x] Usar `http.expectedStatuses()` para não distorcer métricas em testes de cenário negativo.
+- [x] Adicionar log de diagnóstico (`console.error` / `console.warn`) para facilitar debug em carga.
+- [ ] Verificar o comportamento do endpoint quando o corpo da requisição contém campos ausentes ou inválidos.
 - [ ] Registrar os resultados do teste em um relatório único para comparar timings e falhas entre execuções.
