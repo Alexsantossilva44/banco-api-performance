@@ -23,6 +23,7 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 //   Smoke (validação rápida):  k6 run -e SCENARIO=smoke tests/login.test.js
 //   Load  (carga real):        k6 run -e SCENARIO=load  tests/login.test.js
 const SCENARIO = __ENV.SCENARIO || 'load';
+const postLogin = JSON.parse(open('./fixtures/postLogin.json'));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CATÁLOGO DE CENÁRIOS
@@ -30,7 +31,6 @@ const SCENARIO = __ENV.SCENARIO || 'load';
 
 // Cada cenário tem um propósito diferente — um QA Senior nunca usa só um perfil
 const scenarios = {
-
   // SMOKE: 1 VU por 30 segundos — confirma que o teste e a API funcionam antes de aplicar carga real
   // Use sempre antes de qualquer load test em ambiente novo ou após uma mudança de código
   smoke: {
@@ -44,11 +44,11 @@ const scenarios = {
   // Permite observar como a API se comporta à medida que usuários chegam e saem
   load: {
     executor: 'ramping-vus', // varia o número de VUs ao longo do tempo conforme os stages
-    startVUs: 0,             // começa sem nenhum usuário virtual ativo
+    startVUs: 0, // começa sem nenhum usuário virtual ativo
     stages: [
       { duration: '30s', target: 10 }, // ramp-up: aumenta gradualmente de 0 para 10 VUs em 30 segundos
-      { duration: '1m',  target: 10 }, // sustentado: mantém 10 VUs simultâneos por 1 minuto
-      { duration: '15s', target: 0  }, // ramp-down: reduz para 0 VUs em 15 segundos (encerramento suave)
+      { duration: '1m', target: 10 }, // sustentado: mantém 10 VUs simultâneos por 1 minuto
+      { duration: '15s', target: 0 }, // ramp-down: reduz para 0 VUs em 15 segundos (encerramento suave)
     ],
     tags: { scenario: 'load' },
   },
@@ -60,7 +60,6 @@ const scenarios = {
 
 // O objeto "options" é reconhecido automaticamente pelo k6 para configurar o teste
 export const options = {
-
   // Ativa apenas o cenário escolhido — evita rodar smoke e load ao mesmo tempo por engano
   scenarios: {
     [SCENARIO]: scenarios[SCENARIO],
@@ -69,10 +68,10 @@ export const options = {
   // THRESHOLDS: critérios de aprovação/reprovação
   // Se qualquer threshold for violado, o k6 encerra com código de saída 1 (falha) — ideal para CI/CD
   thresholds: {
-    http_req_failed:     ['rate<0.01'],               // no máximo 1% de falhas (erros de rede ou respostas 4xx/5xx não esperadas)
-    http_req_duration:   ['p(95)<500', 'p(99)<1000'], // 95% das respostas em menos de 500ms; 99% em menos de 1000ms
-    http_req_waiting:    ['p(95)<400'],               // TTFB — tempo até o servidor começar a responder; p(95) abaixo de 400ms
-    http_req_connecting: ['p(95)<100'],               // handshake TCP — tempo de abertura de conexão; p(95) abaixo de 100ms
+    http_req_failed: ['rate<0.01'], // no máximo 1% de falhas (erros de rede ou respostas 4xx/5xx não esperadas)
+    http_req_duration: ['p(95)<500', 'p(99)<1000'], // 95% das respostas em menos de 500ms; 99% em menos de 1000ms
+    http_req_waiting: ['p(95)<400'], // TTFB — tempo até o servidor começar a responder; p(95) abaixo de 400ms
+    http_req_connecting: ['p(95)<100'], // handshake TCP — tempo de abertura de conexão; p(95) abaixo de 100ms
   },
 };
 
@@ -91,11 +90,13 @@ export function setup() {
   // lança um erro que interrompe o teste imediatamente com uma mensagem clara
   if (res.status === 0) {
     throw new Error(
-      `API inacessível — nenhuma resposta recebida de ${BASE_URL}. Verifique se o servidor está rodando.`
+      `API inacessível — nenhuma resposta recebida de ${BASE_URL}. Verifique se o servidor está rodando.`,
     );
   }
 
-  console.log(`[SETUP] API acessível (status ${res.status}). Iniciando cenário: "${SCENARIO}"`);
+  console.log(
+    `[SETUP] API acessível (status ${res.status}). Iniciando cenário: "${SCENARIO}"`,
+  );
 
   // Retorna os dados que serão passados para cada iteração da função principal e para teardown()
   return { baseUrl: BASE_URL, scenario: SCENARIO };
@@ -108,9 +109,9 @@ export function setup() {
 // Valida o payload de uma resposta de LOGIN BEM-SUCEDIDO
 // Checagens em camadas: corpo existe → é objeto → tem campo token → é string → não está vazio → é JWT válido
 function validateLoginResponsePayload(parsedBody) {
-  if (!parsedBody || typeof parsedBody !== 'object') return false;    // corpo ausente ou tipo inesperado
-  if (typeof parsedBody.token !== 'string') return false;             // campo token inexistente ou tipo errado
-  if (parsedBody.token.length === 0) return false;                    // token vazio não é útil
+  if (!parsedBody || typeof parsedBody !== 'object') return false; // corpo ausente ou tipo inesperado
+  if (typeof parsedBody.token !== 'string') return false; // campo token inexistente ou tipo errado
+  if (parsedBody.token.length === 0) return false; // token vazio não é útil
   // Formato JWT: três partes separadas por ponto — "header.payload.signature"
   // Um token com formato diferente pode indicar que a API mudou o contrato de resposta
   if (parsedBody.token.split('.').length !== 3) return false;
@@ -122,9 +123,9 @@ function validateLoginResponsePayload(parsedBody) {
 function validateErrorResponse(parsedBody) {
   return (
     parsedBody &&
-    typeof parsedBody === 'object' &&        // corpo deve ser um objeto JSON
+    typeof parsedBody === 'object' && // corpo deve ser um objeto JSON
     typeof parsedBody.message === 'string' && // deve conter "message" explicando o erro
-    parsedBody.message.length > 0            // a mensagem não pode estar vazia
+    parsedBody.message.length > 0 // a mensagem não pode estar vazia
   );
 }
 
@@ -135,7 +136,9 @@ function parseBody(res) {
     return JSON.parse(res.body);
   } catch (e) {
     // Registra no console do k6 para facilitar diagnóstico — aparece no output do terminal
-    console.error(`[PARSE ERROR] Corpo não é JSON válido. Status: ${res.status} | Body: ${res.body}`);
+    console.error(
+      `[PARSE ERROR] Corpo não é JSON válido. Status: ${res.status} | Body: ${res.body}`,
+    );
     return null;
   }
 }
@@ -146,26 +149,21 @@ function parseBody(res) {
 
 // "data" recebe o objeto retornado por setup() — disponível em todas as iterações
 export default function (data) {
-
   // Parâmetros base compartilhados entre todas as requisições desta iteração
   // Tags identificam cada requisição nas métricas — essenciais para filtrar no Grafana ou k6 Cloud
   const baseParams = {
     headers: { 'Content-Type': 'application/json' }, // informa ao servidor que o corpo é JSON
     tags: {
-      endpoint: 'login',                    // nome do endpoint testado
-      env:      __ENV.ENV || 'local',       // ambiente: local | staging | production
-      scenario: SCENARIO,                   // qual cenário está rodando: smoke | load
+      endpoint: 'login', // nome do endpoint testado
+      env: __ENV.ENV || 'local', // ambiente: local | staging | production
+      scenario: SCENARIO, // qual cenário está rodando: smoke | load
     },
   };
 
   // ── CENÁRIO POSITIVO (Happy Path) ────────────────────────────────────────
   // Testa o fluxo com credenciais VÁLIDAS — o servidor deve aceitar e retornar um token JWT
   group('login flow — valid credentials', () => {
-
-    const payload = JSON.stringify({
-      username: __ENV.TEST_USER || 'julio.lima', // lê da variável de ambiente; fallback para execução local
-      senha:    __ENV.TEST_PASS || '123456',
-    });
+    const payload = JSON.stringify(postLogin);
 
     group('send authentication request', () => {
       const res = http.post(`${data.baseUrl}/login`, payload, baseParams);
@@ -174,12 +172,12 @@ export default function (data) {
       // Fundamental para debugar falhas durante uma execução de carga
       if (res.status !== 200) {
         console.error(
-          `[FALHA] Credenciais válidas rejeitadas. Status: ${res.status} | Body: ${res.body}`
+          `[FALHA] Credenciais válidas rejeitadas. Status: ${res.status} | Body: ${res.body}`,
         );
       }
 
       check(res, {
-        'valid login — status is 200':        (r) => r.status === 200,
+        'valid login — status is 200': (r) => r.status === 200,
         'valid login — content-type is json': (r) => {
           // Verifica nas duas capitalizações possíveis — servidores diferentes variam
           const ct = r.headers['Content-Type'] || r.headers['content-type'];
@@ -203,10 +201,9 @@ export default function (data) {
   // Testa o comportamento com credenciais INVÁLIDAS — um QA Senior sempre valida o que NÃO deve funcionar
   // A API deve rejeitar com 401 (Unauthorized) e retornar uma mensagem de erro clara
   group('login flow — invalid credentials', () => {
-
     const invalidPayload = JSON.stringify({
       username: 'usuario.invalido', // usuário inexistente no sistema
-      senha:    'senhaErrada999',   // senha incorreta
+      senha: 'senhaErrada999', // senha incorreta
     });
 
     // IMPORTANTE: informa ao k6 que 401 é um status ESPERADO para esta requisição específica
@@ -218,12 +215,16 @@ export default function (data) {
     };
 
     group('send authentication request', () => {
-      const res = http.post(`${data.baseUrl}/login`, invalidPayload, invalidParams);
+      const res = http.post(
+        `${data.baseUrl}/login`,
+        invalidPayload,
+        invalidParams,
+      );
 
       // Log de diagnóstico para o cenário negativo — 401 é esperado, qualquer outro é suspeito
       if (res.status !== 401) {
         console.warn(
-          `[AVISO] Credenciais inválidas retornaram status inesperado: ${res.status} | Body: ${res.body}`
+          `[AVISO] Credenciais inválidas retornaram status inesperado: ${res.status} | Body: ${res.body}`,
         );
       }
 
@@ -259,6 +260,6 @@ export default function (data) {
 // "data" recebe o mesmo objeto retornado por setup()
 export function teardown(data) {
   console.log(
-    `[TEARDOWN] Teste finalizado — cenário: "${data.scenario}" | base: ${data.baseUrl}`
+    `[TEARDOWN] Teste finalizado — cenário: "${data.scenario}" | base: ${data.baseUrl}`,
   );
 }
