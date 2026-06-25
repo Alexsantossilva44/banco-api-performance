@@ -13,5 +13,7 @@
 - [x] Adicionar tags nas requisições (`endpoint`, `env`, `scenario`) para filtragem em dashboards.
 - [x] Usar `http.expectedStatuses()` para não distorcer métricas em testes de cenário negativo.
 - [x] Adicionar log de diagnóstico (`console.error` / `console.warn`) para facilitar debug em carga.
+- [x] Aplicar `expectedStatuses(200, 404, 405)` no healthcheck do `setup()` — `GET /login` retorna 405 por design e não deve ser contabilizado como falha.
+- [x] Adaptar `validateErrorResponse()` para aceitar o campo `error` retornado pela API, com fallback para `message` para compatibilidade futura.
 - [ ] Verificar o comportamento do endpoint quando o corpo da requisição contém campos ausentes ou inválidos.
 - [ ] Registrar os resultados do teste em um relatório único para comparar timings e falhas entre execuções.
