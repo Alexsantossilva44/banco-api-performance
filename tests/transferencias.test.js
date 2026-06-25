@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { obterToken, BASE_URL } from '../helpers/autenticacao.js';
+import { obterToken, baseURL } from '../helpers/autenticacao.js';
 import { sleep, check } from 'k6';
 
 export const options = {
@@ -9,7 +9,7 @@ export const options = {
 export default function () {
   const token = obterToken();
 
-  const url = `${BASE_URL}/transferencias`;
+  const url = `${baseURL}/transferencias`;
   const payload = JSON.stringify({
     contaOrigem: 1,
     contaDestino: 2,

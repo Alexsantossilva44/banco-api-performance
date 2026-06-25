@@ -4,6 +4,8 @@
 
 // Módulo HTTP do k6 — responsável por enviar todas as requisições à API
 import http from 'k6/http';
+import { baseURL } from '../helpers/autenticacao.js';
+import { postLogin, SCENARIO } from '../helpers/autenticacao.js';
 
 // check  → valida se a resposta atende a um critério e registra o resultado no relatório
 // group  → agrupa ações com um nome para facilitar a leitura do relatório final
@@ -14,16 +16,13 @@ import { check, group, sleep } from 'k6';
 // CONFIGURAÇÃO DE AMBIENTE
 // ─────────────────────────────────────────────────────────────────────────────
 
-// BASE_URL centraliza a URL base da API — nunca hardcode URLs no corpo do teste
-// Para trocar de ambiente sem alterar o código:
-// k6 run tests/login.test.js -e BASE_URL=http://localhost:3000
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
+//const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
 // SCENARIO seleciona qual perfil de carga executar via linha de comando
 //   Smoke (validação rápida):  k6 run -e SCENARIO=smoke tests/login.test.js
 //   Load  (carga real):        k6 run -e SCENARIO=load  tests/login.test.js
-const SCENARIO = __ENV.SCENARIO || 'load';
-const postLogin = JSON.parse(open('../fixtures/postLogin.json'));
+//const SCENARIO = __ENV.SCENARIO || 'load';
+//const postLogin = JSON.parse(open('../fixtures/postLogin.json'));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CATÁLOGO DE CENÁRIOS
@@ -84,13 +83,16 @@ export const options = {
 export function setup() {
   // Verifica se a API está de pé antes de iniciar a carga — evita disparar centenas de VUs contra um servidor caído
   // Adapte o endpoint para o que a sua API oferece (ex: /health, /status, /ping)
-  const res = http.get(`${BASE_URL}/login`, { tags: { type: 'healthcheck' } });
+  const res = http.get(`${baseURL}/login`, {
+    tags: { type: 'healthcheck' },
+    responseCallback: http.expectedStatuses(200, 404, 405),
+  });
 
   // Se a API não responder com um status conhecido (200 ou 404 já provam que está no ar),
   // lança um erro que interrompe o teste imediatamente com uma mensagem clara
   if (res.status === 0) {
     throw new Error(
-      `API inacessível — nenhuma resposta recebida de ${BASE_URL}. Verifique se o servidor está rodando.`,
+      `API inacessível — nenhuma resposta recebida de ${baseURL}. Verifique se o servidor está rodando.`,
     );
   }
 
@@ -99,7 +101,7 @@ export function setup() {
   );
 
   // Retorna os dados que serão passados para cada iteração da função principal e para teardown()
-  return { baseUrl: BASE_URL, scenario: SCENARIO };
+  return { baseUrl: baseURL, scenario: SCENARIO };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,12 +123,10 @@ function validateLoginResponsePayload(parsedBody) {
 // Valida o payload de uma resposta de ERRO (ex: credenciais inválidas)
 // A API deve sempre retornar uma mensagem explicativa — boa prática de design de API
 function validateErrorResponse(parsedBody) {
-  return (
-    parsedBody &&
-    typeof parsedBody === 'object' && // corpo deve ser um objeto JSON
-    typeof parsedBody.message === 'string' && // deve conter "message" explicando o erro
-    parsedBody.message.length > 0 // a mensagem não pode estar vazia
-  );
+  if (!parsedBody || typeof parsedBody !== 'object') return false;
+  // A API retorna { "error": "..." } — campo "message" é fallback para outras implementações
+  const msg = parsedBody.error ?? parsedBody.message;
+  return typeof msg === 'string' && msg.length > 0;
 }
 
 // Tenta converter o corpo da resposta (string) em objeto JavaScript

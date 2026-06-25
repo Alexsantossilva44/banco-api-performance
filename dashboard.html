@@ -192,7 +192,7 @@
     <!-- CABEÇALHO -->
     <div class="header">
         <h1>🚀 Dashboard de Performance</h1>
-        <p>Teste de Login com k6 — Cenário positivo (200 + JWT) e negativo (401 + mensagem de erro)</p>
+        <p>Teste de Login com k6 — Cenário positivo (200 + JWT) e negativo (401 + campo <code>error</code>)</p>
         <p id="timestamp" style="font-size:0.9em; color:#999;"></p>
         <div class="badge-row">
             <span class="badge badge-blue">smoke: 1 VU / 30s</span>
@@ -203,7 +203,7 @@
     </div>
 
     <!-- SEÇÃO: MÉTRICAS PRINCIPAIS -->
-    <p class="section-title">Métricas da última execução (baseline)</p>
+    <p class="section-title">Métricas da última execução (smoke — 1 VU / 30s)</p>
     <div class="grid" style="margin-bottom:30px;">
 
         <!-- Resumo HTTP -->
@@ -211,7 +211,7 @@
             <h2>📊 Resumo HTTP</h2>
             <div class="metric">
                 <span class="metric-label">Requisições totais:</span>
-                <span class="metric-value">10</span>
+                <span class="metric-value">29</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Taxa de falha:</span>
@@ -219,11 +219,11 @@
             </div>
             <div class="metric">
                 <span class="metric-label">Tempo médio:</span>
-                <span class="metric-value">2.74ms</span>
+                <span class="metric-value">2.50ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Tempo máximo:</span>
-                <span class="metric-value">3.48ms</span>
+                <span class="metric-value">4.81ms</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Endpoint:</span>
@@ -274,15 +274,15 @@
             </div>
             <div class="threshold-item">
                 <span class="threshold-name">http_req_duration p(95)</span>
-                <span class="threshold-badge">✓ 3.36ms &lt; 500ms</span>
+                <span class="threshold-badge">✓ 4.13ms &lt; 500ms</span>
             </div>
             <div class="threshold-item">
                 <span class="threshold-name">http_req_duration p(99)</span>
-                <span class="threshold-badge">✓ 3.48ms &lt; 1000ms</span>
+                <span class="threshold-badge">✓ 4.63ms &lt; 1000ms</span>
             </div>
             <div class="threshold-item">
                 <span class="threshold-name">http_req_waiting p(95) — TTFB</span>
-                <span class="threshold-badge">✓ 2.96ms &lt; 400ms</span>
+                <span class="threshold-badge">✓ 3.96ms &lt; 400ms</span>
             </div>
             <div class="threshold-item">
                 <span class="threshold-name">http_req_connecting p(95)</span>
@@ -321,19 +321,19 @@
             <h2>📡 Rede</h2>
             <div class="metric">
                 <span class="metric-label">Dados recebidos:</span>
-                <span class="metric-value">4.2 kB</span>
+                <span class="metric-value">10 kB</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Dados enviados:</span>
-                <span class="metric-value">1.7 kB</span>
+                <span class="metric-value">5.1 kB</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Taxa de recebimento:</span>
-                <span class="metric-value">415 B/s</span>
+                <span class="metric-value">326 B/s</span>
             </div>
             <div class="metric">
                 <span class="metric-label">Taxa de envio:</span>
-                <span class="metric-value">173 B/s</span>
+                <span class="metric-value">166 B/s</span>
             </div>
         </div>
 
@@ -385,7 +385,7 @@
             labels: ['min', 'med', 'avg', 'max'],
             datasets: [{
                 label: 'Duração (ms)',
-                data: [1.56, 2.78, 2.74, 3.48],
+                data: [0.51, 2.51, 2.50, 4.81],
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 borderWidth: 3,
@@ -414,7 +414,7 @@
             datasets: [
                 {
                     label: 'Duração (ms)',
-                    data: [3.24, 3.36, 3.48],
+                    data: [4.04, 4.13, 4.63],
                     backgroundColor: ['#667eea', '#764ba2', '#5a4fcf'],
                     borderColor:     ['#667eea', '#764ba2', '#5a4fcf'],
                     borderWidth: 2
@@ -462,7 +462,7 @@
                 'Mensagem de erro'
             ],
             datasets: [{
-                data: [10, 10, 10, 10, 10],  // baseline: 10 iterações × 1 check cada
+                data: [14, 14, 14, 14, 14],  // smoke: 14 iterações × 1 check cada
                 backgroundColor: ['#28a745', '#667eea', '#764ba2', '#dc3545', '#e07b00'],
                 borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
                 borderWidth: 2
